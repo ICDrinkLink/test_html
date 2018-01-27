@@ -12,83 +12,25 @@
             console.log('Geo-location is not supported for this Browser/OS.');
         }
 
-        //Request location on load - BAD FOR iOS PARTICULARLY
-        //window.onload = requestLocation();
-
-        //Request location on button click
-        function requestLocation() {
-            var startPos;
-            var nudge = document.getElementById("nudge");
-
-            var showNudgeBanner = function() {
-                nudge.style.display = "block";
-            };
-
-            var hideNudgeBanner = function() {
-                nudge.style.display = "none";
-            };
-
-            var nudgeTimeoutId = setTimeout(showNudgeBanner, 5000);
-
-            /*var geoSuccess = function(position) {
-                hideNudgeBanner();
-                // We have the location, don't display banner
-                clearTimeout(nudgeTimeoutId);
-
-                // Do magic with location
-                startPos = position;
-                document.getElementById('startLat').innerHTML = startPos.coords.latitude;
-                document.getElementById('startLon').innerHTML = startPos.coords.longitude;
-            };*/
-
-            navigator.geolocation.getCurrentPosition(handleLocationRequest, handleGeoError);
-
-        }
-
-       // var person = {firstName:"John", lastName:"Doe", age:50, eyeColor:"blue"};
-
-
-        function showPosition(position) {
-            var latlon = position.coords.latitude + "," + position.coords.longitude;
-            var img_url = "https://maps.googleapis.com/maps/api/staticmap?center="
-                +latlon+"&zoom=14&size=400x300&key=AIzaSyBu-916DdpKAjTmJNIgngS6HL_kDIKU0aU";
-            document.getElementById("mapholder").innerHTML = "<img src='"+img_url+"'>";
-        }
-
-        function showError(error) {
-            switch(error.code) {
-                case error.PERMISSION_DENIED:
-                    x.innerHTML = "User denied the request for Geolocation.";
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    x.innerHTML = "Location information is unavailable.";
-                    break;
-                case error.TIMEOUT:
-                    x.innerHTML = "The request to get user location timed out.";
-                    break;
-                case error.UNKNOWN_ERROR:
-                    x.innerHTML = "An unknown error occurred.";
-                    break;
-            }
-        }
-
-        //Give to navigator.geolocation.getCurrentPosition to handle error
-        function handleGeoError(error) {
-            switch(error.code) {
-                case error.TIMEOUT:
-                    // The user didn't accept the callout?
-                    //showNudgeBanner();
-                    break;
-            }
+        var geoOptions = {
+            timeout: 10 * 1000
         };
+
+        //Fixed variance for use in checking within range.
+        var WITHIN_RANGE = 20;
 
         // Set the date we're counting down to
         var countDownDate = new Date("Jan 30, 2018 15:37:25").getTime();
 
+        //Request location on button click
+        function requestLocation() {
+            navigator.geolocation.getCurrentPosition(handleLocationRequest, handleGeoError, geoOptions);
+        }
+
         // Update the count down every 5 minutes
         var x = setInterval(function() {
 
-            // Get todays date and time
+            // Get today's date and time
             var now = new Date().getTime();
 
             // Find the distance between now an the count down date
@@ -110,10 +52,18 @@
                 document.getElementById("demo").innerHTML = "EXPIRED";
             }
 
-
             requestLocation();
 
         }, 1000  * 0.1); //currently every 1/10th a second
+
+        function handleGeoError(error) {
+            console.log('Error occurred. Error code: ' + error.code);
+            // error.code can be: HANDLE EXPLICITLY
+            //   0: unknown error
+            //   1: permission denied
+            //   2: position unavailable (error response from location provider)
+            //   3: timed out
+        };
 
         //Give to navigator.geolocation.getCurrentPosition to handle output
         function handleLocationRequest(position) {
@@ -140,7 +90,6 @@
         function getRange(currentCoords, homeCoords) {
             var lat1 = currentCoords.latitude;
             var lon1 = currentCoords.longitude;
-
             var lat2 = homeCoords.latitude;
             var lon2 = homeCoords.longitude;
 
@@ -153,32 +102,18 @@
                     Math.cos(φ1) * Math.cos(φ2) *
                     Math.sin(Δλ/2) * Math.sin(Δλ/2);
             var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
             var range = R * c;
-
-            if (range < 10) {
-                alert("You're home")
-            }
-
-
             return range;
         }
 
-
     </script>
-
 </head>
 <body>
 <p><label id="nudge">nudge</label></p>
 <p><label id="startLat">Latitude</label></p>
 <p><label id="startLon">Longitude</label></p>
 <p id="demo"></p>
-
-<p id="log"></p>
-
 <p id="dist"></p>
-
 <button onclick="requestLocation()">Get Location</button>
-
 </body>
 </html>
