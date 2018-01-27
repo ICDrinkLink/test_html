@@ -6,10 +6,9 @@
 
     <script>
         // Check for Geo-location support
-        if (navigator.geolocation) {
-            console.log('Geo-location is supported!');
-        } else {
+        if (!navigator.geolocation) {
             console.log('Geo-location is not supported for this Browser/OS.');
+            //Return to previous page/cleanup code/show alert
         }
 
         var geoOptions = {
@@ -19,10 +18,10 @@
         var trackTimer;
 
         //Fixed variance for use in checking within range.
-        var WITHIN_RANGE = 20;
+        const WITHIN_RANGE = 20;
 
         //Number of milliseconds in a day
-        var MILLISECS_IN_DAY = 8.64e7;
+        const MILLISECS_IN_DAY = 8.64e7;
 
         //Set the date we're counting down to - 25 hours from now
         var trackLocationFor = (new Date().getTime() + MILLISECS_IN_DAY);
@@ -50,7 +49,7 @@
 
         //Handle errors
         function handleGeoError(error) {
-            switch (error) {
+            switch (error.code) {
                 case 0:
                     console.log("Unknown error");
                     showUnknownErrorAlert();
@@ -68,7 +67,7 @@
                     showTimeOutGettingLocationAlert();
                     break;
                 default:
-                    console.log("Shouldn't ever happen" + error.code);
+                    console.log("Shouldn't ever happen " + error.code);
             }
         }
 
@@ -90,11 +89,6 @@
             alert("See Google code for solving time out issues");
         }
 
-        //Request location on button click
-        //function requestLocation() {
-        //    navigator.geolocation.getCurrentPosition(handleLocationRequest, handleGeoError, geoOptions);
-        //}
-
         //Function to track location whilst timer is not done
         function trackLocation() {
             //Find the time between now an the countdown date
@@ -109,7 +103,6 @@
             navigator.geolocation.getCurrentPosition(handleLocationRequest, handleGeoError, geoOptions);
         }
 
-
         //Give to navigator.geolocation.getCurrentPosition to handle output
         function handleLocationRequest(position) {
             //hideNudgeBanner();
@@ -120,9 +113,13 @@
             document.getElementById('startLat').innerHTML = position.coords.latitude;
             document.getElementById('startLon').innerHTML = position.coords.longitude;
 
-            //51.498831, -0.177820
             var homeCoords = {coords: {latitude: 51.498831, longitude: -0.177820}};
             document.getElementById('dist').innerHTML = getRange(position.coords, homeCoords.coords);
+
+            //If the user is home, stop tracking location
+            if (getRange(position.coords, homeCoords.coords) < WITHIN_RANGE) {
+                clearInterval(trackTimer);
+            }
         }
 
         //Convert degrees to radians
